@@ -9,6 +9,16 @@ const recentTbody = document.querySelector('#recentTable tbody');
 
 let stream = null;
 
+function formatModelLivenessText(result) {
+  if (result.model_liveness_checked) {
+    const score = result.model_liveness_score ?? '-';
+    return result.model_liveness_passed
+      ? `模型活体：已通过（${score}）`
+      : `模型活体：未通过（${score}）`;
+  }
+  return `模型活体：未校验（${result.model_liveness_reason || 'unknown'}）`;
+}
+
 startBtn.addEventListener('click', async () => {
   try {
     stream = await navigator.mediaDevices.getUserMedia({
@@ -103,17 +113,20 @@ async function submitFrames(token, frames, challenges) {
       <div class="name" style="margin-top:8px">${app.escapeHtml(j.matched_student.name)}（${app.escapeHtml(j.matched_student.student_no)}）</div>
       <div class="meta">${j.timestamp}</div>
       <div class="meta">情绪：${app.escapeHtml(j.emotion_cn || j.emotion)}
-                       人脸距离：${j.distance ?? '-'}</div>`;
+                       人脸距离：${j.distance ?? '-'}</div>
+      <div class="meta">${app.escapeHtml(formatModelLivenessText(j))}</div>`;
   } else if (j.status === 'fail') {
     resultCard.classList.add('fail');
     resultCard.innerHTML = `
       <div class="tag fail">✗ 活体检测未通过</div>
-      <div class="meta" style="margin-top:6px">未完成所有动作挑战，可能是照片或视频伪造。请重试。</div>`;
+      <div class="meta" style="margin-top:6px">未完成所有动作挑战，可能是照片或视频伪造。请重试。</div>
+      <div class="meta">${app.escapeHtml(formatModelLivenessText(j))}</div>`;
   } else {
     resultCard.classList.add('fail');
     resultCard.innerHTML = `
       <div class="tag warn">⚠ 未匹配到学生</div>
-      <div class="meta" style="margin-top:6px">活体已通过但人脸未匹配到库中学生。</div>`;
+      <div class="meta" style="margin-top:6px">活体已通过但人脸未匹配到库中学生。</div>
+      <div class="meta">${app.escapeHtml(formatModelLivenessText(j))}</div>`;
   }
 
   captureBtn.disabled = false;

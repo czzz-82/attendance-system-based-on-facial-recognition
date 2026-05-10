@@ -112,6 +112,20 @@ python manage.py adduser 2024001 123456 student <student_id>
 
 阈值在 `config.py` 调整。
 
+### 模型二次活体说明
+
+- 模型结构代码位于 `活体检测/model2/model.py`
+- 默认权重文件位于 `活体检测/weight_save/best_model.pth`
+- 运行该模型至少需要 `torch`、`torchvision`、`torch-dct`
+- 若同时启用人脸超分增强，还需要 `gfpgan` 及其相关依赖
+
+系统会在动作活体通过后，从有效人脸帧中均匀抽取多张图片做二次活体投票。你可以通过以下方式确认模型是否真的运行：
+
+- 考勤结果卡片会显示 `模型活体：已通过（分数）`、`模型活体：未通过（分数）` 或 `模型活体：未校验（原因）`
+- 浏览器开发者工具里查看 `POST /api/attendance/verify` 的返回字段：
+  `model_liveness_checked`、`model_liveness_passed`、`model_liveness_score`、`model_liveness_reason`
+- 数据库 `attendance_records.note` 也会记录 `model_liveness=passed/failed/skipped`
+
 ## 六、API 速查
 
 | 方法 + 路径 | 说明 | 权限 |
