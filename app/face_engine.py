@@ -31,7 +31,7 @@ _enhancer = None
 
 def _ensure_models():
     """惰性加载 dlib 模型（首次调用阻塞，后续直接返回）。"""
-    global _detector, _predictor, _recognizer
+    global _detector, _predictor, _recognizer, _enhancer
     if _detector is not None:
         return
     with _lock:

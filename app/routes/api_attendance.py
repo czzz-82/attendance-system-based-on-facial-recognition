@@ -7,11 +7,28 @@ from typing import List
 from flask import Blueprint, jsonify, request, send_file
 
 import config
-from .. import face_engine, liveness
+from .. import face_engine, liveness, liveness_model
 from ..auth import login_required, teacher_required, current_user
 from ..models import execute, query_all, query_one
 
 bp_attendance = Blueprint("attendance", __name__)
+
+
+def _build_liveness_note(distance, model_result: dict) -> str:
+    parts = []
+    if distance is not None:
+        parts.append(f"distance={distance}")
+
+    if model_result["checked"]:
+        state = "passed" if model_result["passed"] else "failed"
+        parts.append(f"model_liveness={state}")
+        if model_result["score"] is not None:
+            parts.append(f"score={model_result['score']}")
+    else:
+        parts.append("model_liveness=skipped")
+        parts.append(f"reason={model_result['reason']}")
+
+    return "; ".join(parts)
 
 
 # -----------------------------------------------------------------------------
@@ -66,6 +83,14 @@ def verify_and_recognize():
     # 校验全部动作
     results = {a: liveness.verify_action(a, metrics) for a in sess.challenges}
     liveness_passed = all(results.values())
+    model_result = liveness_model.build_skip_result("not_run", available=False)
+    if liveness_passed:
+        model_result = liveness_model.verify_liveness_from_frames(decoded_frames, metrics)
+    model_liveness_blocked = (
+        liveness_passed and
+        model_result["checked"] and
+        model_result["passed"] is False
+    )
 
     # 人脸比对（取最后一张有效帧做识别 / 情绪分析）
     matched_student = None
@@ -73,7 +98,7 @@ def verify_and_recognize():
     emotion = "unknown"
 
     valid_idxs = [i for i, m in enumerate(metrics) if m.has_face]
-    if liveness_passed and valid_idxs:
+    if liveness_passed and not model_liveness_blocked and valid_idxs:
         target_img = decoded_frames[valid_idxs[-1]]
         face_box = face_engine.detect_faces(target_img, upsample=1)
         if face_box:
@@ -99,13 +124,14 @@ def verify_and_recognize():
 
     # 写入数据库
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    note = _build_liveness_note(distance, model_result)
     if liveness_passed and matched_student:
         status = "success"
         execute(
             "INSERT INTO attendance_records(student_id,student_no,name,timestamp,status,"
             "liveness_passed,emotion,note) VALUES (?,?,?,?,?,?,?,?)",
             (matched_student["id"], matched_student["student_no"], matched_student["name"],
-             now, status, 1, emotion, f"distance={distance}"),
+             now, status, 1, emotion, note),
         )
         if emotion and emotion != "unknown":
             execute(
@@ -114,14 +140,22 @@ def verify_and_recognize():
                 (matched_student["id"], matched_student["student_no"], matched_student["name"],
                  emotion, "attendance", now),
             )
+    elif model_liveness_blocked:
+        status = "fail"
+        execute(
+            "INSERT INTO attendance_records(student_id,student_no,name,timestamp,status,"
+            "liveness_passed,emotion,note) VALUES (?,?,?,?,?,?,?,?)",
+            (None, None, None, now, status, 1, None, note),
+        )
     else:
         status = "fail" if not liveness_passed else "unknown"
+        if not liveness_passed:
+            note = "活体未通过"
         execute(
             "INSERT INTO attendance_records(student_id,student_no,name,timestamp,status,"
             "liveness_passed,emotion,note) VALUES (?,?,?,?,?,?,?,?)",
             (None, None, None, now, status, 1 if liveness_passed else 0,
-             emotion if liveness_passed else None,
-             "活体未通过" if not liveness_passed else "未匹配到学生"),
+             emotion if liveness_passed else None, note),
         )
 
     return jsonify({
@@ -132,6 +166,11 @@ def verify_and_recognize():
         "distance": distance,
         "emotion": emotion,
         "emotion_cn": config.EMOTION_CN.get(emotion, emotion),
+        "model_liveness_checked": model_result["checked"],
+        "model_liveness_available": model_result["available"],
+        "model_liveness_passed": model_result["passed"],
+        "model_liveness_score": model_result["score"],
+        "model_liveness_reason": model_result["reason"],
         "status": status,
         "timestamp": now,
     })

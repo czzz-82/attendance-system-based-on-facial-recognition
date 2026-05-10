@@ -28,6 +28,12 @@ MAR_OPEN_THRESHOLD = 0.55        # 嘴巴张开的 MAR 阈值
 HEAD_YAW_THRESHOLD = 18.0        # 转头偏航角阈值（度）
 LIVENESS_FRAME_MIN = 8           # 最少帧数
 LIVENESS_FRAME_MAX = 60          # 最多帧数
+LIVENESS_MODEL_PATH = os.path.join(BASE_DIR, "活体检测", "weight_save", "best_model.pth")
+LIVENESS_MODEL_INPUT_SIZE = 256
+LIVENESS_MODEL_FRAME_COUNT = 5
+LIVENESS_MODEL_THRESHOLD = 0.5
+LIVENESS_MODEL_FACE_MARGIN = 16
+LIVENESS_MODEL_ALLOW_SKIP = True
 
 # 情绪类型映射（DeepFace 的英文 → 中文）
 EMOTION_CN = {
