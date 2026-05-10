@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}学生管理{% endblock %}
+{% block content %}
+<h2>学生管理</h2>
+
+<section class="panel">
+  <h3>添加单个学生</h3>
+  <form id="addForm" class="row-form">
+    <input name="student_no" placeholder="学号" required />
+    <input name="name" placeholder="姓名" required />
+    <input name="class_name" placeholder="班级（可选）" />
+    <input name="photo" type="file" accept="image/*" required />
+    <button class="btn-primary" type="submit">添加</button>
+  </form>
+  <div id="addMsg" class="msg"></div>
+</section>
+
+<section class="panel">
+  <h3>批量导入（多文件）</h3>
+  <form id="batchForm" class="row-form">
+    <input name="photos" type="file" accept="image/*" multiple required />
+    <button class="btn-primary" type="submit">批量导入</button>
+    <span class="hint">文件名格式：<b>学号_姓名_班级.jpg</b>（班级可省略）</span>
+  </form>
+  <div id="batchMsg" class="msg"></div>
+</section>
+
+<section class="panel">
+  <h3>学生列表</h3>
+  <table class="data-table" id="studentsTable">
+    <thead><tr><th>照片</th><th>学号</th><th>姓名</th><th>班级</th><th>操作</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/students.js') }}"></script>
+{% endblock %}

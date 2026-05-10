@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}合照识别{% endblock %}
+{% block content %}
+<h2>合照识别</h2>
+
+<section class="panel">
+  <h3>上传合照</h3>
+  <form id="groupForm" class="row-form">
+    <input name="name" placeholder="活动名称（如：班会、运动会）" required />
+    <input name="held_on" type="date" required />
+    <input name="photo" type="file" accept="image/*" required />
+    <button class="btn-primary" type="submit">上传并识别</button>
+  </form>
+  <div id="groupMsg" class="msg"></div>
+</section>
+
+<section class="panel hide" id="resultPanel">
+  <h3>识别结果</h3>
+  <div class="layout-2col">
+    <div>
+      <img id="annotatedImg" alt="识别结果" style="max-width:100%;border-radius:8px"/>
+    </div>
+    <div>
+      <p>检测到 <b id="detectedCnt">0</b> 张人脸，匹配到 <b id="matchedCnt">0</b> 名学生。</p>
+      <table class="data-table">
+        <thead><tr><th>学号</th><th>姓名</th><th>情绪</th><th>距离</th></tr></thead>
+        <tbody id="matchedTbody"></tbody>
+      </table>
+      <h4>情绪分布</h4>
+      <canvas id="emotionPie" height="180"></canvas>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <h3>历史活动</h3>
+  <table class="data-table" id="actTable">
+    <thead><tr><th>日期</th><th>活动</th><th>检测人数</th><th>匹配学生</th><th>合照</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/group.js') }}"></script>
+{% endblock %}

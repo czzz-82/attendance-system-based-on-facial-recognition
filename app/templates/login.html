@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>登录 — 班级考勤系统</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body class="login-bg">
+  <div class="login-card">
+    <h1>班级考勤系统</h1>
+    <p class="subtitle">人脸识别 + 活体检测 + 情绪分析</p>
+    <form id="loginForm">
+      <label>用户名 <input name="username" autocomplete="username" required /></label>
+      <label>密码 <input type="password" name="password" autocomplete="current-password" required /></label>
+      <button type="submit" class="btn-primary">登录</button>
+    </form>
+    <div class="hint">默认管理员：admin / admin123</div>
+    <div id="loginErr" class="error"></div>
+  </div>
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const data = { username: form.username.value, password: form.password.value };
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      });
+      const j = await res.json();
+      if (res.ok) {
+        location.href = '/dashboard';
+      } else {
+        document.getElementById('loginErr').textContent = j.error || '登录失败';
+      }
+    });
+  </script>
+</body>
+</html>

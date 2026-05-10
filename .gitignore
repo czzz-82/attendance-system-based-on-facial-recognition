@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+data/attendance.db
+app/static/uploads/*/*
+!app/static/uploads/*/.gitkeep
+!app/static/uploads/*/*/.gitkeep
