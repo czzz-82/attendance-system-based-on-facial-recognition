@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+data/attendance.db
+app/static/uploads/*/*
+!app/static/uploads/*/.gitkeep
+!app/static/uploads/*/*/.gitkeep
+shape_predictor_68_face_landmarks.dat
+dlib_face_recognition_resnet_model_v1.dat
+活体检测.zip
+活体检测/weight_save/
+docs/superpowers/

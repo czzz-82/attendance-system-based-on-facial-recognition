@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}考勤打卡{% endblock %}
+{% block content %}
+<div class="page-title cinematic-title">
+  <div>
+    <span class="eyebrow">LIVE CAPTURE</span>
+    <h2>考勤打卡</h2>
+  </div>
+  <div class="mini-stats"><span>一次性挑战 Token</span><span>防照片 / 视频伪造</span></div>
+</div>
+<div class="tech-ribbon attendance-tech-ribbon">
+  <span class="tech-chip">摄像头采集</span>
+  <span class="tech-chip">随机动作挑战</span>
+  <span class="tech-chip">模型活体</span>
+  <span class="tech-chip">身份匹配</span>
+  <span class="tech-chip">情绪记录</span>
+</div>
+
+<div class="layout-2col">
+  <section class="panel capture-panel">
+    <h3>① 摄像头实时画面</h3>
+    <div class="camera-box">
+      <video id="video" autoplay playsinline muted></video>
+      <canvas id="overlay"></canvas>
+    </div>
+    <div class="control-row">
+      <button id="startBtn" class="btn-primary">📷 开启摄像头</button>
+      <button id="captureBtn" class="btn-primary" disabled>👤 开始考勤</button>
+      <span class="hint">浏览器需允许摄像头权限</span>
+    </div>
+  </section>
+
+  <section class="panel challenge-panel">
+    <h3>② 活体挑战与结果</h3>
+    <div id="challengeArea">
+      <p class="muted">点击「开始考勤」后将随机生成动作挑战。</p>
+    </div>
+    <div id="resultCard" class="result-card hide"></div>
+  </section>
+</div>
+
+<section class="panel data-panel">
+  <div class="section-head"><h3>近期考勤</h3><span class="hint">最近 8 条记录实时刷新</span></div>
+  <table class="data-table" id="recentTable">
+    <thead><tr><th>时间</th><th>学号</th><th>姓名</th><th>结果</th><th>活体</th><th>情绪</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/attendance.js') }}?v=professional-v2"></script>
+{% endblock %}

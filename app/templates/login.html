@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>登录 — 内容安全智能考勤系统</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=professional-v2" />
+</head>
+<body class="login-bg login-observatory">
+  <div class="ambient ambient-grid"></div>
+  <div class="ambient ambient-orb orb-a"></div>
+  <div class="ambient ambient-orb orb-b"></div>
+  <main class="login-stage">
+    <section class="login-poster">
+      <span class="eyebrow">CONTENT SECURITY SYSTEM</span>
+      <h1>人脸识别<br/>智能考勤系统</h1>
+      <p>融合活体检测、合照小脸超分、情绪分析与可视化统计，为课堂、活动和日常管理提供安全、可解释、可追踪的识别分析能力。</p>
+      <div class="login-metrics">
+        <span>Face ID</span><span>Anti-Spoof</span><span>GFPGAN SR</span><span>Emotion</span>
+      </div>
+    </section>
+    <section class="login-card">
+      <div class="login-mark">🔐</div>
+      <h1>系统登录</h1>
+      <p class="subtitle">教师端 / 学生端统一入口</p>
+      <form id="loginForm">
+        <label>用户名 <input name="username" autocomplete="username" required placeholder="admin 或学生学号" /></label>
+        <label>密码 <input type="password" name="password" autocomplete="current-password" required placeholder="请输入密码" /></label>
+        <button type="submit" class="btn-primary">登录</button>
+      </form>
+      <div class="hint">默认管理员：admin / admin123</div>
+      <div id="loginErr" class="error"></div>
+    </section>
+  </main>
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const data = { username: form.username.value, password: form.password.value };
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      });
+      const j = await res.json();
+      if (res.ok) location.href = '/dashboard';
+      else document.getElementById('loginErr').textContent = j.error || '登录失败';
+    });
+  </script>
+</body>
+</html>

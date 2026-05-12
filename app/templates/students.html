@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}学生管理{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div>
+    <h2>学生管理</h2>
+  </div>
+  <div class="mini-stats" id="studentStats"></div>
+</div>
+<div class="tech-ribbon student-tech-ribbon">
+  <span class="tech-chip">照片入库</span>
+  <span class="tech-chip">人脸检测</span>
+  <span class="tech-chip">128维特征</span>
+  <span class="tech-chip">学生账号</span>
+</div>
+
+<section class="panel">
+  <div class="section-head">
+    <h3 id="formTitle">添加单个学生</h3>
+    <button class="btn-mini hide" type="button" id="cancelEditBtn">取消编辑</button>
+  </div>
+  <form id="addForm" class="row-form enhanced-form">
+    <input type="hidden" name="id" />
+    <input name="student_no" placeholder="学号" required />
+    <input name="name" placeholder="姓名" required />
+    <input name="class_name" placeholder="班级（可选）" />
+    <input id="studentPhotoInput" name="photo" type="file" accept="image/*" />
+    <button class="btn-primary" type="submit" id="saveBtn">添加</button>
+  </form>
+  <div class="preview-strip hide" id="studentPreviewWrap">
+    <span class="hint">照片预览</span>
+    <img id="studentPhotoPreview" alt="照片预览" />
+  </div>
+  <div class="hint">新增学生必须上传一张清晰正面照；编辑时不上传照片则保留原人脸特征。</div>
+  <div id="addMsg" class="msg"></div>
+</section>
+
+<section class="panel">
+  <h3>批量导入（多文件）</h3>
+  <form id="batchForm" class="row-form">
+    <input name="photos" type="file" accept="image/*" multiple required />
+    <label class="check"><input name="update_existing" type="checkbox" value="1" checked /> 覆盖已有学号</label>
+    <button class="btn-primary" type="submit">批量导入</button>
+    <span class="hint">文件名：<b>学号_姓名_班级.jpg</b>，也支持 <b>学号-姓名-班级.jpg</b></span>
+  </form>
+  <div id="batchMsg" class="msg"></div>
+</section>
+
+<section class="panel">
+  <div class="section-head">
+    <h3>学生列表</h3>
+    <div class="toolbar">
+      <input id="studentSearch" class="search-input" placeholder="搜索学号 / 姓名 / 班级" />
+      <button id="reloadStudentsBtn" class="btn-mini" type="button">刷新</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table" id="studentsTable">
+      <thead><tr><th>ID</th><th>照片</th><th>学号</th><th>姓名</th><th>班级</th><th>操作</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/students.js') }}?v=professional-v2"></script>
+{% endblock %}

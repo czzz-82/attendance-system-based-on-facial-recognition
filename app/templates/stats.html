@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}统计分析{% endblock %}
+{% block content %}
+<div class="page-title">
+  <div>
+    <h2>统计分析</h2>
+  </div>
+  <div class="mini-stats" id="statsSummary"></div>
+</div>
+<div class="tech-ribbon stats-tech-ribbon">
+  <span class="tech-chip">综合参与</span>
+  <span class="tech-chip">情绪分布</span>
+  <span class="tech-chip">时间趋势</span>
+  <span class="tech-chip">考勤结果</span>
+</div>
+
+<section class="panel">
+  <div class="section-head">
+    <h3>筛选条件</h3>
+    <span class="hint">筛选会同时作用于情绪饼图、情绪折线图和考勤趋势图</span>
+  </div>
+  <form id="emotionFilter" class="row-form enhanced-form">
+    {% if user.role == 'teacher' %}<input name="student_no" placeholder="按学号筛选" />{% endif %}
+    <select name="source">
+      <option value="">全部情绪来源</option>
+      <option value="attendance">考勤打卡</option>
+      <option value="group_photo">合照识别</option>
+    </select>
+    <label>开始 <input type="date" name="date_from" /></label>
+    <label>结束 <input type="date" name="date_to" /></label>
+    <button class="btn-primary" type="submit">更新图表</button>
+    <button class="btn" type="button" id="resetStatsBtn">重置</button>
+  </form>
+</section>
+
+<div class="layout-2col">
+  <section class="panel">
+    <div class="section-head">
+      <h3>综合参与频次（柱状图）</h3>
+      <span class="hint">考勤成功 + 合照参与</span>
+    </div>
+    <canvas id="activityBar" height="220"></canvas>
+  </section>
+  <section class="panel">
+    <h3>情绪分布（饼图）</h3>
+    <canvas id="emotionPie" height="220"></canvas>
+  </section>
+</div>
+
+<div class="layout-2col">
+  <section class="panel">
+    <div class="section-head">
+      <h3>情绪时间趋势（按分钟）</h3>
+      <span class="hint">连续测试会显示多个时间点</span>
+    </div>
+    <canvas id="emotionLine" height="180"></canvas>
+  </section>
+  <section class="panel">
+    <h3>考勤结果时间趋势</h3>
+    <canvas id="attendanceLine" height="180"></canvas>
+  </section>
+</div>
+
+<section class="panel">
+  <div class="section-head">
+    <h3>参与频次明细</h3>
+    <span class="hint">按综合参与次数排序；可看到考勤和合照分别贡献了多少</span>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table" id="actTable">
+      <thead><tr><th>排名</th><th>学号</th><th>姓名</th><th>考勤成功</th><th>合照参与</th><th>综合参与</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/stats.js') }}?v=professional-v2"></script>
+{% endblock %}
