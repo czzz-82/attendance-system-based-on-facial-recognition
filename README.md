@@ -6,27 +6,34 @@
 
 | 模块 | 关键能力 |
 | --- | --- |
-| 基础考勤 | 浏览器实时摄像头采集 → 动作活体检测（眨眼/张嘴/转头）→ 模型二次活体投票 → 人脸 1:N 匹配 → 写入考勤记录，支持按日期/学号筛选 + Excel 导出 |
+| 基础考勤 | 浏览器实时摄像头采集 → 动作活体检测（眨眼/张嘴/转头）→ 模型二次活体投票 → 人脸 1:N 匹配（默认阈值 0.4） → 写入考勤记录，支持按日期/学号筛选 + Excel 导出 |
 | 合照识别 | 上传大合照（10–50 人），后端批量人脸检测 → 匹配学生 → 自动生成参与名单与活动频次统计（柱状图/表格） |
 | 情绪分析 | 考勤、合照流程同步调用 DeepFace 做情绪识别（7 类），后端落库，前端饼图 + 时间折线 |
 | 安全防护 | 随机一次性活体挑战（1~2 个动作），抗静态照片/重放视频；教师/学生角色权限隔离；上传大小限制 32 MB；模型懒加载 |
 
+> 项目已包含 `attendance_system_overview.ipynb`，该 Jupyter Notebook 详细讲解系统工作流、前后端架构、模块数据流以及核心函数对应关系。
+
 ## 二、项目结构
 
 ```
-final/
 ├── run.py                        启动入口
 ├── manage.py                     CLI 工具：initdb / adduser
 ├── config.py                     全局配置（阈值、路径、密钥）
-├── requirements.txt
-├── shape_predictor_68_face_landmarks.dat   (需下载)
-├── dlib_face_recognition_resnet_model_v1.dat (需下载)
+├── requirements.txt              Python 依赖
+├── README.md                     项目说明文档
+├── attendance_system_overview.ipynb   系统工作流与模块讲解笔记
 ├── data/                         SQLite 数据库
+├── gfpgan/weights/               GFPGAN 模型权重
+├── liveness/model2/              轻量活体检测模型代码
+├── liveness/weight_save/         活体模型权重
+├── models/                       模型权重目录（dlib/GFPGAN）
 ├── app/
-│   ├── __init__.py               Flask 工厂
-│   ├── face_engine.py            dlib 检测/编码/匹配 + DeepFace 情绪
-│   ├── liveness.py               EAR/MAR/yaw + 动作状态机 + 会话管理
+│   ├── __init__.py               Flask 工厂与路由注册
 │   ├── auth.py                   登录/权限装饰器
+│   ├── face_engine.py            dlib 检测/编码/匹配 + DeepFace 情绪
+│   ├── face_enhancer.py          GFPGAN 人脸超分增强
+│   ├── liveness.py               EAR/MAR/yaw 动作活体 + 会话管理
+│   ├── liveness_model.py         PyTorch 轻量活体模型封装
 │   ├── models/                   SQLite 数据访问层
 │   ├── routes/                   pages + auth + students/attendance/group/stats API
 │   ├── templates/                Jinja 模板
@@ -34,14 +41,15 @@ final/
 │       ├── css/style.css
 │       ├── js/                   common / attendance / students / group / records / stats
 │       └── uploads/              学生人脸照 + 合照
-└── 5-1.py / 5-2.py / 5-3.py      参考代码（保留）
+└── tests/                        单元测试与端到端测试
 ```
 
 ## 三、运行环境
 
-- Python 3.9 ~ 3.11（dlib 在更高版本编译可能需自行处理）
+- Python 3.9 ~ 3.12（dlib 在更高版本编译可能需自行处理）
 - Windows / macOS / Linux 均可
 - 浏览器：Chrome / Edge ≥ 100（getUserMedia 需要 https 或 localhost）
+- 依赖包括：Flask、dlib、torch、torchvision、torch-dct、gfpgan、basicsr、facexlib、deepface、pandas、openpyxl、Pillow
 
 ## 四、部署步骤
 
@@ -57,12 +65,16 @@ pip install -r requirements.txt
 
 ### 2. 下载模型文件
 
-把以下两个文件放到项目根目录（与 `run.py` 同级）：
+以下模型权重需要准备：
 
-- [`shape_predictor_68_face_landmarks.dat`](http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2)
-- [`dlib_face_recognition_resnet_model_v1.dat`](http://dlib.net/files/dlib_face_recognition_resnet_model_v1.dat.bz2)
+- `shape_predictor_68_face_landmarks.dat`
+- `dlib_face_recognition_resnet_model_v1.dat`
+- `models/GFPGANv1.4.pth`（可选，用于人脸超分）
+- `liveness/weight_save/best_model.pth`（可选，用于二次活体模型）
 
-下载后用 `bzip2 -d` 解压。
+`config.py` 会优先从项目根目录查找 `shape_predictor_68_face_landmarks.dat` 和 `dlib_face_recognition_resnet_model_v1.dat`，如果没有则会从 `models/` 子目录读取。
+
+下载后用 `bzip2 -d` 解压。若本地已放置权重文件，系统会自动加载；若缺少可选模型，则该功能会按配置降级并记录原因。
 
 DeepFace 首次运行会自动下载情绪识别模型至 `~/.deepface/`，需联网。
 
@@ -73,7 +85,7 @@ python manage.py initdb
 python run.py
 ```
 
-浏览器打开 <http://localhost:5000> ，默认教师账号：
+浏览器打开 <http://127.0.0.1:5000> 或 <http://localhost:5000> ，默认教师账号：
 
 ```
 用户名：admin
@@ -114,10 +126,10 @@ python manage.py adduser 2024001 123456 student <student_id>
 
 ### 模型二次活体说明
 
-- 模型结构代码位于 `活体检测/model2/model.py`
-- 默认权重文件位于 `活体检测/weight_save/best_model.pth`
+- 模型结构代码位于 `liveness/model2/model.py`
+- 默认权重文件位于 `liveness/weight_save/best_model.pth`
 - 运行该模型至少需要 `torch`、`torchvision`、`torch-dct`
-- 若同时启用人脸超分增强，还需要 `gfpgan` 及其相关依赖
+- 若同时启用人脸超分增强，还需要 `gfpgan`、`basicsr`、`facexlib` 及其相关依赖
 
 系统会在动作活体通过后，从有效人脸帧中均匀抽取多张图片做二次活体投票。你可以通过以下方式确认模型是否真的运行：
 

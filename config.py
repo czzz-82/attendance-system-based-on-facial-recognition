@@ -8,18 +8,30 @@ SECRET_KEY = "change-me-in-production-please"
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "app", "static", "uploads")
 STUDENTS_FOLDER = os.path.join(UPLOAD_FOLDER, "students")
 ACTIVITIES_FOLDER = os.path.join(UPLOAD_FOLDER, "activities")
-ALLOWED_IMG_EXT = {"png", "jpg", "jpeg", "bmp"}
+ALLOWED_IMG_EXT = {"png", "jpg", "jpeg", "bmp", "webp"}
 MAX_CONTENT_LENGTH = 32 * 1024 * 1024  # 32MB
 
 # 数据库
 DB_PATH = os.path.join(BASE_DIR, "data", "attendance.db")
 
-# 模型文件（需提前下载到项目根目录）
-SHAPE_PREDICTOR_PATH = os.path.join(BASE_DIR, "shape_predictor_68_face_landmarks.dat")
-FACE_REC_MODEL_PATH = os.path.join(BASE_DIR, "dlib_face_recognition_resnet_model_v1.dat")
+# 模型文件：优先读取项目根目录；若不存在，则读取 models/ 子目录（当前项目已放在 models/）。
+def _first_existing(*paths):
+    for path in paths:
+        if os.path.exists(path):
+            return path
+    return paths[0]
+
+SHAPE_PREDICTOR_PATH = _first_existing(
+    os.path.join(BASE_DIR, "shape_predictor_68_face_landmarks.dat"),
+    os.path.join(BASE_DIR, "models", "shape_predictor_68_face_landmarks.dat"),
+)
+FACE_REC_MODEL_PATH = _first_existing(
+    os.path.join(BASE_DIR, "dlib_face_recognition_resnet_model_v1.dat"),
+    os.path.join(BASE_DIR, "models", "dlib_face_recognition_resnet_model_v1.dat"),
+)
 
 # 人脸识别阈值（128维欧氏距离，0.6 是 dlib 官方推荐）
-FACE_MATCH_THRESHOLD = 0.5
+FACE_MATCH_THRESHOLD = 0.4
 
 # 活体检测参数
 EAR_BLINK_THRESHOLD = 0.21       # 眼睛闭合的 EAR 阈值

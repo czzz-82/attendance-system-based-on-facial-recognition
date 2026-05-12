@@ -141,6 +141,16 @@ def encode_face_with_enhancement(img_bgr: np.ndarray, face: dlib.rectangle, min_
     
     return np.array(desc, dtype=np.float32)
 
+
+
+def enhance_face_image(face_img_bgr: np.ndarray) -> np.ndarray:
+    """对已经裁剪出的人脸小图做超分增强，主要供合照页面展示 Before/After 局部对比。"""
+    _ensure_models()
+    if _enhancer is None:
+        return face_img_bgr
+    return _enhancer.enhance(face_img_bgr)
+
+
 def encode_first_face(img_bgr: np.ndarray) -> Optional[np.ndarray]:
     faces = detect_faces(img_bgr, upsample=1)
     if not faces:

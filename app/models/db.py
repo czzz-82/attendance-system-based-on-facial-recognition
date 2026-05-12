@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS activities (
     photo_path TEXT,
     detected INTEGER DEFAULT 0,
     matched INTEGER DEFAULT 0,
+    analysis_json TEXT,                    -- 保存合照分析档案：原图/标注图/超分样本/识别结果
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -103,6 +104,10 @@ CREATE INDEX IF NOT EXISTS idx_emotions_sid ON emotions(student_id);
 def init_schema():
     with get_conn() as conn:
         conn.executescript(SCHEMA)
+        # 兼容旧数据库：为历史活动补充完整分析 JSON 列
+        cols = [row[1] for row in conn.execute("PRAGMA table_info(activities)").fetchall()]
+        if "analysis_json" not in cols:
+            conn.execute("ALTER TABLE activities ADD COLUMN analysis_json TEXT")
 
 
 def execute(sql, params=()):

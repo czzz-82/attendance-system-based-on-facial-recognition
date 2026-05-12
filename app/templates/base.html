@@ -3,26 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{% block title %}班级考勤系统{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <title>{% block title %}内容安全智能考勤系统{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=professional-v2" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
-<body>
+<body class="secure-shell">
+  <div class="ambient ambient-grid"></div>
+  <div class="ambient ambient-orb orb-a"></div>
+  <div class="ambient ambient-orb orb-b"></div>
   {% if user %}
   <header class="topbar">
-    <div class="brand">📷 班级考勤系统</div>
-    <nav>
-      <a href="{{ url_for('pages.dashboard') }}">概览</a>
-      <a href="{{ url_for('pages.attendance_page') }}">考勤打卡</a>
+    <div class="brand">
+      <span class="brand-icon">🔐</span>
+      <span>
+        <b>内容安全智能考勤</b>
+        <small>FACE ID · LIVENESS · ANALYTICS</small>
+      </span>
+    </div>
+    <nav class="main-nav">
+      <a class="{{ 'active' if request.endpoint == 'pages.dashboard' else '' }}" href="{{ url_for('pages.dashboard') }}">概览</a>
+      <a class="{{ 'active' if request.endpoint == 'pages.attendance_page' else '' }}" href="{{ url_for('pages.attendance_page') }}">考勤打卡</a>
       {% if user.role == 'teacher' %}
-        <a href="{{ url_for('pages.students_page') }}">学生管理</a>
-        <a href="{{ url_for('pages.group_page') }}">合照识别</a>
+        <a class="{{ 'active' if request.endpoint == 'pages.students_page' else '' }}" href="{{ url_for('pages.students_page') }}">学生管理</a>
+        <a class="{{ 'active' if request.endpoint == 'pages.group_page' else '' }}" href="{{ url_for('pages.group_page') }}">合照识别</a>
       {% endif %}
-      <a href="{{ url_for('pages.records_page') }}">考勤记录</a>
-      <a href="{{ url_for('pages.stats_page') }}">统计分析</a>
+      <a class="{{ 'active' if request.endpoint == 'pages.records_page' else '' }}" href="{{ url_for('pages.records_page') }}">考勤记录</a>
+      <a class="{{ 'active' if request.endpoint == 'pages.stats_page' else '' }}" href="{{ url_for('pages.stats_page') }}">统计分析</a>
     </nav>
     <div class="userinfo">
-      <span>{{ user.username }} ({{ '教师' if user.role == 'teacher' else '学生' }})</span>
+      <span class="role-pill">{{ '教师' if user.role == 'teacher' else '学生' }}</span>
+      <span>{{ user.username }}</span>
       <button id="logoutBtn" class="btn-link">退出</button>
     </div>
   </header>
@@ -30,7 +40,8 @@
   <main class="container">
     {% block content %}{% endblock %}
   </main>
-  <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+  <div id="toast" class="toast hide"></div>
+  <script src="{{ url_for('static', filename='js/common.js') }}?v=professional-v2"></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>

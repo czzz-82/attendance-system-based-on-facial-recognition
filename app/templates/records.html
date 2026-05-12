@@ -1,10 +1,21 @@
 {% extends "base.html" %}
 {% block title %}考勤记录{% endblock %}
 {% block content %}
-<h2>考勤记录</h2>
+<div class="page-title">
+  <div>
+    <h2>考勤记录</h2>
+  </div>
+  <div class="mini-stats" id="recordStats"></div>
+</div>
+<div class="tech-ribbon records-tech-ribbon">
+  <span class="tech-chip">按日期筛选</span>
+  <span class="tech-chip">按学生追踪</span>
+  <span class="tech-chip">活体状态</span>
+  <span class="tech-chip">Excel 导出</span>
+</div>
 
 <section class="panel">
-  <form id="filterForm" class="row-form">
+  <form id="filterForm" class="row-form enhanced-form">
     <label>开始日期 <input type="date" name="date_from" /></label>
     <label>结束日期 <input type="date" name="date_to" /></label>
     {% if user.role == 'teacher' %}
@@ -19,6 +30,7 @@
       </select>
     </label>
     <button type="submit" class="btn-primary">查询</button>
+    <button type="button" class="btn" id="resetFilterBtn">重置</button>
     {% if user.role == 'teacher' %}
     <a href="/api/attendance/export" class="btn">📥 导出 Excel</a>
     {% endif %}
@@ -26,15 +38,17 @@
 </section>
 
 <section class="panel">
-  <table class="data-table" id="recordsTable">
-    <thead>
-      <tr><th>时间</th><th>学号</th><th>姓名</th><th>结果</th><th>活体</th><th>情绪</th><th>备注</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <div class="table-wrap">
+    <table class="data-table" id="recordsTable">
+      <thead>
+        <tr><th>时间</th><th>学号</th><th>姓名</th><th>结果</th><th>活体</th><th>情绪</th><th>备注</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 </section>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/records.js') }}"></script>
+<script src="{{ url_for('static', filename='js/records.js') }}?v=professional-v2"></script>
 {% endblock %}

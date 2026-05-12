@@ -1,46 +1,110 @@
 {% extends "base.html" %}
 {% block title %}合照识别{% endblock %}
 {% block content %}
-<h2>合照识别</h2>
+<div class="page-title">
+  <div>
+    <h2>合照识别与超分增强展示</h2>
+  </div>
+</div>
+<div class="tech-ribbon group-tech-ribbon">
+  <span class="tech-chip">多人脸检测</span>
+  <span class="tech-chip">小脸局部超分</span>
+  <span class="tech-chip">中文标注</span>
+  <span class="tech-chip">匹配距离</span>
+  <span class="tech-chip">情绪聚合</span>
+  <span class="tech-chip">分析档案</span>
+</div>
 
-<section class="panel">
-  <h3>上传合照</h3>
-  <form id="groupForm" class="row-form">
+<section class="panel upload-panel">
+  <div class="section-head">
+    <h3>上传合照</h3>
+    <span class="tag warn">超分阈值：小于 80px 的人脸自动增强</span>
+  </div>
+  <form id="groupForm" class="row-form enhanced-form">
     <input name="name" placeholder="活动名称（如：班会、运动会）" required />
     <input name="held_on" type="date" required />
-    <input name="photo" type="file" accept="image/*" required />
-    <button class="btn-primary" type="submit">上传并识别</button>
+    <input id="groupPhotoInput" name="photo" type="file" accept="image/*" required />
+    <button class="btn-primary" type="submit" id="groupSubmitBtn">上传并识别</button>
   </form>
+  <div class="sr-flow">
+    <span>原始合照</span><b>→</b><span>人脸检测</span><b>→</b><span>小脸超分增强</span><b>→</b><span>特征匹配 / 情绪分析</span><b>→</b><span>保存分析档案</span>
+  </div>
   <div id="groupMsg" class="msg"></div>
 </section>
 
-<section class="panel hide" id="resultPanel">
-  <h3>识别结果</h3>
-  <div class="layout-2col">
-    <div>
-      <img id="annotatedImg" alt="识别结果" style="max-width:100%;border-radius:8px"/>
+<section class="panel hide" id="comparePanel">
+  <div class="section-head">
+    <h3>合照识别结果对比</h3>
+    <span class="hint">左侧为原始上传图，右侧为识别标注结果图；整张图不做超分，真正的局部小脸超分在下方单独展示。</span>
+  </div>
+  <div class="compare-grid">
+    <div class="compare-card">
+      <div class="compare-title">Before：原始合照</div>
+      <img id="originalPreview" alt="原始合照预览" />
     </div>
+    <div class="compare-card">
+      <div class="compare-title">After：识别标注结果（中文姓名 + 匹配距离）</div>
+      <img id="annotatedImg" alt="识别结果" />
+    </div>
+  </div>
+</section>
+
+<section class="panel hide" id="srPanel">
+  <div class="section-head">
+    <h3>小脸局部超分 Before / After</h3>
+    <span class="hint" id="srHint">展示从合照中裁剪出的人脸小图及 GFPGAN 增强结果。若人脸尺寸低于阈值，该增强图会用于辅助特征提取。</span>
+  </div>
+  <div id="srSamples" class="sr-samples"></div>
+</section>
+
+<section class="panel hide" id="resultPanel">
+  <div class="section-head">
+    <h3>识别结果</h3>
+    <div class="result-metrics">
+      <span class="metric">检测 <b id="detectedCnt">0</b> 人</span>
+      <span class="metric">匹配 <b id="matchedCnt">0</b> 人</span>
+      <span class="metric">未匹配 <b id="unmatchedCnt">0</b> 人</span>
+    </div>
+  </div>
+  <div class="layout-2col result-layout">
     <div>
-      <p>检测到 <b id="detectedCnt">0</b> 张人脸，匹配到 <b id="matchedCnt">0</b> 名学生。</p>
       <table class="data-table">
         <thead><tr><th>学号</th><th>姓名</th><th>情绪</th><th>距离</th></tr></thead>
         <tbody id="matchedTbody"></tbody>
       </table>
+    </div>
+    <div>
       <h4>情绪分布</h4>
-      <canvas id="emotionPie" height="180"></canvas>
+      <canvas id="emotionPie" height="210"></canvas>
     </div>
   </div>
 </section>
 
 <section class="panel">
-  <h3>历史活动</h3>
-  <table class="data-table" id="actTable">
-    <thead><tr><th>日期</th><th>活动</th><th>检测人数</th><th>匹配学生</th><th>合照</th></tr></thead>
-    <tbody></tbody>
-  </table>
+  <div class="section-head">
+    <h3>历史活动</h3>
+    <button id="reloadActivitiesBtn" type="button" class="btn-mini">刷新</button>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table" id="actTable">
+      <thead><tr><th>日期</th><th>活动</th><th>检测人数</th><th>匹配学生</th><th>匹配率</th><th>合照</th><th>结果分析</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel hide" id="historyAnalysisPanel">
+  <div class="section-head">
+    <div>
+      <h3>历史结果分析</h3>
+      <p class="muted" id="historyAnalysisMeta">选择历史活动后展示完整分析档案。</p>
+    </div>
+    <button type="button" class="btn-mini" id="closeHistoryAnalysisBtn">收起</button>
+  </div>
+  <div id="historyAnalysisContent"></div>
 </section>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/group.js') }}"></script>
+<script src="{{ url_for('static', filename='js/group.js') }}?v=analysis-archive-1"></script>
 {% endblock %}
